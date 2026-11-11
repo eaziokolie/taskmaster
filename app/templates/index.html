@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}TaskMaster - Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card card text-center p-3">
+            <div class="stat-number">{{ stats.total }}</div>
+            <div class="stat-label">Total Tasks</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card card text-center p-3 active-card">
+            <div class="stat-number text-primary">{{ stats.active }}</div>
+            <div class="stat-label">Active</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card card text-center p-3 done-card">
+            <div class="stat-number text-success">{{ stats.completed }}</div>
+            <div class="stat-label">Completed</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card card text-center p-3 urgent-card">
+            <div class="stat-number text-danger">{{ stats.high }}</div>
+            <div class="stat-label">High Priority</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4 filter-bar">
+    <div class="card-body d-flex flex-wrap gap-2 align-items-center">
+        <span class="text-muted me-2 fw-semibold">Filter:</span>
+        <a href="{{ url_for('main.index', filter='all', priority=priority) }}"
+           class="btn btn-sm {{ 'btn-dark' if filter_by == 'all' else 'btn-outline-secondary' }}">All</a>
+        <a href="{{ url_for('main.index', filter='active', priority=priority) }}"
+           class="btn btn-sm {{ 'btn-primary' if filter_by == 'active' else 'btn-outline-primary' }}">Active</a>
+        <a href="{{ url_for('main.index', filter='completed', priority=priority) }}"
+           class="btn btn-sm {{ 'btn-success' if filter_by == 'completed' else 'btn-outline-success' }}">Completed</a>
+
+        <div class="vr mx-2"></div>
+        <span class="text-muted fw-semibold">Priority:</span>
+        <a href="{{ url_for('main.index', filter=filter_by, priority='all') }}"
+           class="btn btn-sm {{ 'btn-dark' if priority == 'all' else 'btn-outline-secondary' }}">All</a>
+        <a href="{{ url_for('main.index', filter=filter_by, priority='high') }}"
+           class="btn btn-sm {{ 'btn-danger' if priority == 'high' else 'btn-outline-danger' }}">High</a>
+        <a href="{{ url_for('main.index', filter=filter_by, priority='medium') }}"
+           class="btn btn-sm {{ 'btn-warning' if priority == 'medium' else 'btn-outline-warning' }}">Medium</a>
+        <a href="{{ url_for('main.index', filter=filter_by, priority='low') }}"
+           class="btn btn-sm {{ 'btn-secondary' if priority == 'low' else 'btn-outline-secondary' }}">Low</a>
+    </div>
+</div>
+
+<!-- Task List -->
+{% if tasks %}
+    <div class="task-list">
+        {% for task in tasks %}
+        <div class="task-card card mb-3 {{ 'task-done' if task.completed }} priority-{{ task.priority }}">
+            <div class="card-body d-flex align-items-start gap-3">
+                <!-- Toggle checkbox -->
+                <form action="{{ url_for('main.toggle_task', task_id=task.id) }}" method="POST" class="mt-1">
+                    <button type="submit" class="btn btn-check-custom p-0 border-0 bg-transparent">
+                        <i class="bi {{ 'bi-check-circle-fill text-success' if task.completed else 'bi-circle text-muted' }} fs-4"></i>
+                    </button>
+                </form>
+
+                <!-- Task content -->
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h6 class="mb-0 task-title {{ 'text-decoration-line-through text-muted' if task.completed }}">
+                            {{ task.title }}
+                        </h6>
+                        <span class="badge priority-badge priority-{{ task.priority }}">
+                            {{ task.priority | capitalize }}
+                        </span>
+                    </div>
+                    {% if task.description %}
+                        <p class="text-muted small mb-0 mt-1">{{ task.description }}</p>
+                    {% endif %}
+                    <small class="text-muted">
+                        <i class="bi bi-clock me-1"></i>{{ task.created_at.strftime('%b %d, %Y') }}
+                    </small>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('main.edit_task', task_id=task.id) }}"
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form action="{{ url_for('main.delete_task', task_id=task.id) }}" method="POST"
+                          onsubmit="return confirm('Delete this task?')">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state text-center py-5">
+        <i class="bi bi-clipboard2-check display-1 text-muted"></i>
+        <h4 class="mt-3 text-muted">No tasks found</h4>
+        <p class="text-muted">Start by creating your first task!</p>
+        <a href="{{ url_for('main.new_task') }}" class="btn btn-primary mt-2">
+            <i class="bi bi-plus-lg me-1"></i> Create Task
+        </a>
+    </div>
+{% endif %}
+{% endblock %}
